@@ -21,9 +21,10 @@ userController.createUser = async (req, res, next) => {
     next(error);
   }
 };
+
 userController.getUsers = async (req, res, next) => {
   try {
-    const users = await User.find();
+    const users = await User.find({ isDeleted: false }).populate("task");
     sendResponse(
       res,
       200,
@@ -36,6 +37,7 @@ userController.getUsers = async (req, res, next) => {
     next(error);
   }
 };
+
 userController.searchNameUser = async (req, res, next) => {
   try {
     const userName = req.query.name;
@@ -55,10 +57,17 @@ userController.searchNameUser = async (req, res, next) => {
     next(error);
   }
 };
+
 userController.getAllTaskUser = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    const user = await User.findById(userId).populate("task");
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new AppError(400, "Bad Request", "Invalid User ID");
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError(404, "Not Found", "User not found");
+    }
     sendResponse(res, 200, true, user, null, "Find Task of User");
   } catch (error) {
     next(error);
