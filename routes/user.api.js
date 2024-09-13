@@ -6,9 +6,10 @@ const {
   searchNameUser,
   getAllTaskUser,
 } = require("../controllers/user.controller");
+const { validateCreateUser } = require("../middleware/validator");
 
-router.post("/", createUser);
+router.post("/", validateCreateUser, createUser);
 router.get("/", getUsers);
 router.get("/search", searchNameUser);
-router.get("/tasks/:id",getAllTaskUser)
+router.get("/tasks/:id", getAllTaskUser);
 module.exports = router;

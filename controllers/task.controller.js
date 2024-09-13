@@ -26,7 +26,16 @@ taskController.createTask = async (req, res, next) => {
 };
 taskController.getTask = async (req, res, next) => {
   try {
-    const tasks = await Task.find({ isDeleted: false }).populate("assignedTo");
+    const { name, status } = req.query;
+    const filter = { isDeleted: false };
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+    if (status) {
+      filter.status = status;
+    }
+
+    const tasks = await Task.find(filter).populate("assignedTo");
     sendResponse(
       res,
       200,
@@ -45,7 +54,7 @@ taskController.getSingleTask = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(taskId)) {
       throw new AppError(400, "Invalid ID", "Task ID is invalid");
     }
-    const singleTask = await Task.findById(taskId);
+    const singleTask = await Task.findOne({ _id: taskId, isDeleted: false });
     if (!singleTask) throw new AppError(404, "Not Found", "Task not found");
     sendResponse(res, 200, true, singleTask, null, "Get Single Task Success");
   } catch (error) {
@@ -163,7 +172,7 @@ taskController.deleteTask = async (req, res, next) => {
       { $pull: { task: taskId } }
     );
 
-    if (updateUser.length === 0){
+    if (updateUser.length === 0) {
       throw new AppError(404, "Not Found", "No Update User ");
     }
 
